@@ -1,42 +1,31 @@
-import React, { useState } from 'react';
-import { auth, googleProvider, githubProvider, facebookProvider } from '../firebase';
-import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { auth, googleProvider, githubProvider, facebookProvider, linkedInProvider } from '../firebase';
+import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
+      setError(error.message);
       console.error('Error logging in:', error);
     }
   };
 
-  const signInWithGoogle = async () => {
+  const handleSocialLogin = async (provider) => {
+    setError('');
     try {
-      await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(auth, provider);
     } catch (error) {
-      console.error('Error signing in with Google:', error);
-    }
-  };
-
-  const signInWithGithub = async () => {
-    try {
-      await signInWithPopup(auth, githubProvider);
-    } catch (error) {
-      console.error('Error signing in with GitHub:', error);
-    }
-  };
-
-  const signInWithFacebook = async () => {
-    try {
-      await signInWithPopup(auth, facebookProvider);
-    } catch (error) {
-      console.error('Error signing in with Facebook:', error);
+      setError(error.message);
+      console.error('Social login error:', error);
     }
   };
 
@@ -64,13 +53,39 @@ const Login = () => {
           Login
         </button>
       </form>
+      {error && <p className="text-red-500 mt-2">{error}</p>}
       <Link to="/register" className="w-full mt-2 text-blue-500 block text-center">
         Need to register?
       </Link>
-      <div className="mt-4">
-        <button onClick={signInWithGoogle} className="w-full bg-red-500 text-white p-2 rounded mb-2">Sign In with Google</button>
-        <button onClick={signInWithGithub} className="w-full bg-gray-800 text-white p-2 rounded mb-2">Sign In with GitHub</button>
-        <button onClick={signInWithFacebook} className="w-full bg-blue-600 text-white p-2 rounded">Sign In with Facebook</button>
+      <div className="mt-4 space-y-2">
+        <button
+          type="button"
+          onClick={() => handleSocialLogin(googleProvider)}
+          className="w-full bg-red-500 text-white p-2 rounded"
+        >
+          Login with Google
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSocialLogin(githubProvider)}
+          className="w-full bg-gray-800 text-white p-2 rounded"
+        >
+          Login with GitHub
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSocialLogin(facebookProvider)}
+          className="w-full bg-blue-600 text-white p-2 rounded"
+        >
+          Login with Facebook
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSocialLogin(linkedInProvider)}
+          className="w-full bg-sky-600 text-white p-2 rounded"
+        >
+          Login with LinkedIn
+        </button>
       </div>
     </div>
   );

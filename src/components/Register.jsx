@@ -1,28 +1,18 @@
-import React, { useState } from 'react';
-import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { auth } from '../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      // Store additional data in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        name,
-        email,
-        uid: user.uid,
-        createdAt: new Date(),
-      });
+      await createUserWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      console.error('Error registering:', error);
+      console.error('Register error:', error);
     }
   };
 
@@ -30,14 +20,6 @@ const Register = () => {
     <div className="p-4 max-w-md mx-auto">
       <h2 className="text-2xl mb-4">Register</h2>
       <form onSubmit={handleRegister}>
-        <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full p-2 mb-2 border"
-          required
-        />
         <input
           type="email"
           placeholder="Email"
