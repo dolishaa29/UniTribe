@@ -40,10 +40,10 @@ const Login = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-purple-600/70 to-pink-500/70" />
 
           <div className="absolute bottom-10 left-10 text-white">
-            <h2 className="text-4xl font-bold">Welcome Back</h2>
-            <p className="text-sm mt-2 opacity-80">
-              Sign in to continue your journey
-            </p>
+<h2 className="text-4xl font-bold">Access Your Account</h2>
+<p className="text-sm mt-2 opacity-80">
+  Enter your credentials to continue.
+</p>
           </div>
         </div>
 
