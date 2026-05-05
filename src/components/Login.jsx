@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { auth, googleProvider, githubProvider, facebookProvider, linkedInProvider } from '../firebase';
+import { auth, googleProvider } from '../firebase';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 
 const Login = () => {
@@ -15,7 +15,6 @@ const Login = () => {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       setError(error.message);
-      console.error('Error logging in:', error);
     }
   };
 
@@ -25,7 +24,6 @@ const Login = () => {
       await signInWithPopup(auth, provider);
     } catch (error) {
       setError(error.message);
-      console.error('Social login error:', error);
     }
   };
 
@@ -57,34 +55,13 @@ const Login = () => {
       <Link to="/register" className="w-full mt-2 text-blue-500 block text-center">
         Need to register?
       </Link>
-      <div className="mt-4 space-y-2">
+      <div className="mt-4">
         <button
           type="button"
           onClick={() => handleSocialLogin(googleProvider)}
           className="w-full bg-red-500 text-white p-2 rounded"
         >
           Login with Google
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSocialLogin(githubProvider)}
-          className="w-full bg-gray-800 text-white p-2 rounded"
-        >
-          Login with GitHub
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSocialLogin(facebookProvider)}
-          className="w-full bg-blue-600 text-white p-2 rounded"
-        >
-          Login with Facebook
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSocialLogin(linkedInProvider)}
-          className="w-full bg-sky-600 text-white p-2 rounded"
-        >
-          Login with LinkedIn
         </button>
       </div>
     </div>

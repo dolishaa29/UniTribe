@@ -14,6 +14,7 @@ const Dashboard = () => {
     <div className="p-4 max-w-md mx-auto">
       <h2 className="text-2xl mb-4">Dashboard</h2>
       <p>Welcome, {auth.currentUser?.email}</p>
+      <p>{auth.currentUser?.displayName}</p>
       <button onClick={handleSignOut} className="bg-red-500 text-white px-4 py-2 rounded">
         Sign Out
       </button>
