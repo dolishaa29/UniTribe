@@ -4,8 +4,8 @@ import { signOut } from "firebase/auth";
 
 const Dashboard = () => {
   const [colleges, setColleges] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState("India");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const BASE_URL =
@@ -16,29 +16,25 @@ const Dashboard = () => {
     setError(null);
 
     try {
-      const url = selectedCountry
-        ? `${BASE_URL}&rows=50&refine.country=${selectedCountry}`
-        : `${BASE_URL}&rows=50`;
+      const url = `${BASE_URL}&rows=50&refine.country=${encodeURIComponent(
+        selectedCountry
+      )}`;
 
       const res = await fetch(url);
       const data = await res.json();
 
       setColleges(data.records || []);
     } catch (err) {
-      setError("Failed to load colleges");
+      setError("Failed to fetch data");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Default load (India)
+  // ✅ Load India by default
   useEffect(() => {
     fetchColleges(country);
   }, []);
-
-  const handleSearch = () => {
-    fetchColleges(country);
-  };
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -47,7 +43,6 @@ const Dashboard = () => {
   return (
     <div className="p-4 max-w-5xl mx-auto">
       <h2 className="text-2xl mb-2">Dashboard</h2>
-
       <p className="mb-4">{auth.currentUser?.email}</p>
 
       <button
@@ -57,27 +52,25 @@ const Dashboard = () => {
         Sign Out
       </button>
 
-      {/* ✅ SEARCH + DROPDOWN */}
+      {/* ✅ SEARCH */}
       <div className="flex gap-2 mb-6">
         <input
           type="text"
-          placeholder="Enter country name (e.g. India, USA)"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
+          placeholder="Enter country (e.g. India)"
           className="border px-3 py-2 rounded w-full"
         />
 
         <button
-          onClick={handleSearch}
+          onClick={() => fetchColleges(country)}
           className="bg-blue-600 text-white px-4 py-2 rounded"
         >
           Search
         </button>
       </div>
 
-      <h3 className="text-xl mb-3">
-        Universities {country && `in ${country}`}
-      </h3>
+      <h3 className="text-xl mb-3">Universities in {country}</h3>
 
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
@@ -87,16 +80,20 @@ const Dashboard = () => {
           {colleges.map((c, index) => (
             <li key={index} className="mb-3">
               <strong>{c.fields.name}</strong>
-              <span className="text-gray-500 ml-2">
+              <span className="ml-2 text-gray-600">
                 ({c.fields.country})
               </span>
 
               {c.fields.website && (
                 <a
-                  href={c.fields.website}
+                  href={
+                    Array.isArray(c.fields.website)
+                      ? c.fields.website[0]
+                      : c.fields.website
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-500 ml-3"
+                  className="text-blue-600 ml-2 underline"
                 >
                   Visit
                 </a>
