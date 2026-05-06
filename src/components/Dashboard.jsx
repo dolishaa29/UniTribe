@@ -15,7 +15,6 @@ const Dashboard = () => {
   const [country, setCountry] = useState("India");
   const [loading, setLoading] = useState(false);
 
-  // ✅ SIMPLE API CALL
   const fetchColleges = async () => {
     setLoading(true);
 
@@ -37,9 +36,11 @@ const Dashboard = () => {
     await signOut(auth);
   };
 
-  const getLogo = (url) => {
+  // ✅ LOGO URL BANANE KA SIMPLE FUNCTION
+  const getLogoUrl = (homepageUrl) => {
     try {
-      return `https://logo.clearbit.com/${new URL(url).hostname}`;
+      const domain = new URL(homepageUrl).hostname;
+      return `https://logo.clearbit.com/${domain}`;
     } catch {
       return null;
     }
@@ -47,7 +48,9 @@ const Dashboard = () => {
 
   return (
     <div className="p-5 max-w-5xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Colleges & Universities</h2>
+      <h2 className="text-2xl font-bold mb-4">
+        Colleges & Universities ({country})
+      </h2>
 
       <button
         onClick={handleSignOut}
@@ -56,7 +59,7 @@ const Dashboard = () => {
         Sign Out
       </button>
 
-      {/* ✅ Country filter */}
+      {/* Country filter */}
       <div className="flex gap-2 mb-5">
         <select
           value={country}
@@ -80,46 +83,48 @@ const Dashboard = () => {
 
       {loading && <p>Loading...</p>}
 
-      {/* ✅ College List */}
+      {/* COLLEGE LIST */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {colleges.map((c, i) => (
-          <div
-            key={i}
-            className="flex gap-4 items-center p-3 border rounded"
-          >
-            {/* LOGO */}
-            {c.homepage_url ? (
-              <img
-                src={getLogo(c.homepage_url)}
-                alt={c.display_name}
-                className="w-12 h-12 object-contain"
-                onError={(e) => (e.target.style.display = "none")}
-              />
-            ) : (
-              <div className="w-12 h-12 bg-gray-200 rounded" />
-            )}
+        {colleges.map((c, i) => {
+          const logoUrl = c.homepage_url
+            ? getLogoUrl(c.homepage_url)
+            : null;
 
-            {/* INFO */}
-            <div>
-              <h4 className="font-semibold">{c.display_name}</h4>
-
-              <p className="text-sm text-gray-600">
-                Country: {c.country_code}
-              </p>
-
-              {c.homepage_url && (
-                <a
-                  href={c.homepage_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 text-sm underline"
-                >
-                  Visit website
-                </a>
+          return (
+            <div
+              key={i}
+              className="flex gap-4 items-center p-3 border rounded"
+            >
+              {/* LOGO */}
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={c.display_name}
+                  className="w-12 h-12 object-contain"
+                  onError={(e) => (e.target.style.display = "none")}
+                />
+              ) : (
+                <div className="w-12 h-12 bg-gray-200 rounded" />
               )}
+
+              {/* INFO */}
+              <div>
+                <h4 className="font-semibold">{c.display_name}</h4>
+
+                {c.homepage_url && (
+                  <a
+                    href={c.homepage_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 text-sm underline"
+                  >
+                    Visit website
+                  </a>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
