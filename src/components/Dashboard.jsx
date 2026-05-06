@@ -3,37 +3,38 @@ import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 
 const Dashboard = () => {
-  const [colleges, setColleges] = useState([]);
+  const [universities, setUniversities] = useState([]);
   const [country, setCountry] = useState("India");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const BASE_URL =
-    "https://public.opendatasoft.com/api/records/1.0/search/?dataset=world-universities";
+    "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/world-universities/records";
 
-  const fetchColleges = async (selectedCountry) => {
+  const fetchUniversities = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const url = `${BASE_URL}&rows=50&refine.country=${encodeURIComponent(
-        selectedCountry
-      )}`;
+      const url = `${BASE_URL}?where=country="${encodeURIComponent(
+        country
+      )}"&limit=50`;
 
-      const res = await fetch(url);
-      const data = await res.json();
+      const response = await fetch(url);
+      const data = await response.json();
 
-      setColleges(data.records || []);
+      setUniversities(data.results || []);
     } catch (err) {
-      setError("Failed to fetch data");
+      console.error(err);
+      setError("Failed to fetch universities");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Load India by default
+  // ✅ Load default country on page load
   useEffect(() => {
-    fetchColleges(country);
+    fetchUniversities();
   }, []);
 
   const handleSignOut = async () => {
@@ -41,9 +42,12 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-4 max-w-5xl mx-auto">
-      <h2 className="text-2xl mb-2">Dashboard</h2>
-      <p className="mb-4">{auth.currentUser?.email}</p>
+    <div className="p-6 max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
+
+      <p className="mb-4 text-gray-700">
+        Logged in as: {auth.currentUser?.email}
+      </p>
 
       <button
         onClick={handleSignOut}
@@ -52,44 +56,49 @@ const Dashboard = () => {
         Sign Out
       </button>
 
-      {/* ✅ SEARCH */}
+      {/* 🔍 Search Section */}
       <div className="flex gap-2 mb-6">
         <input
           type="text"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
-          placeholder="Enter country (e.g. India)"
+          placeholder="Enter country (e.g. India, Canada)"
           className="border px-3 py-2 rounded w-full"
         />
-
         <button
-          onClick={() => fetchColleges(country)}
+          onClick={fetchUniversities}
           className="bg-blue-600 text-white px-4 py-2 rounded"
         >
           Search
         </button>
       </div>
 
-      <h3 className="text-xl mb-3">Universities in {country}</h3>
+      <h2 className="text-xl font-semibold mb-3">
+        Universities in {country}
+      </h2>
 
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
 
-      {!loading && !error && (
+      {!loading && !error && universities.length === 0 && (
+        <p>No universities found.</p>
+      )}
+
+      {!loading && !error && universities.length > 0 && (
         <ul className="list-disc pl-5">
-          {colleges.map((c, index) => (
+          {universities.map((uni, index) => (
             <li key={index} className="mb-3">
-              <strong>{c.fields.name}</strong>
+              <strong>{uni.name}</strong>
               <span className="ml-2 text-gray-600">
-                ({c.fields.country})
+                ({uni.country})
               </span>
 
-              {c.fields.website && (
+              {uni.website && (
                 <a
                   href={
-                    Array.isArray(c.fields.website)
-                      ? c.fields.website[0]
-                      : c.fields.website
+                    Array.isArray(uni.website)
+                      ? uni.website[0]
+                      : uni.website
                   }
                   target="_blank"
                   rel="noopener noreferrer"
