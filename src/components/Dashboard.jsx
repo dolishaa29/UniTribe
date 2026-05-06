@@ -2,52 +2,51 @@ import { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 
+const countryMap = {
+  India: "IN",
+  "United States": "US",
+  Canada: "CA",
+  Australia: "AU",
+  "United Kingdom": "GB",
+};
+
 const Dashboard = () => {
-  const [universities, setUniversities] = useState([]);
+  const [institutions, setInstitutions] = useState([]);
   const [country, setCountry] = useState("India");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  const BASE_URL =
-    "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/world-universities/records";
-
-  const fetchUniversities = async () => {
+  const fetchInstitutions = async () => {
     setLoading(true);
-    setError(null);
 
-    try {
-      const url = `${BASE_URL}?where=country="${encodeURIComponent(
-        country
-      )}"&limit=50`;
-
-      const response = await fetch(url);
-      const data = await response.json();
-
-      setUniversities(data.results || []);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch universities");
-    } finally {
-      setLoading(false);
-    }
+    const res = await fetch(
+      `https://api.openalex.org/institutions?filter=country_code:${countryMap[country]}&per-page=25`
+    );
+    const data = await res.json();
+    setInstitutions(data.results || []);
+    setLoading(false);
   };
 
-  // ✅ Load default country on page load
   useEffect(() => {
-    fetchUniversities();
+    fetchInstitutions();
   }, []);
 
   const handleSignOut = async () => {
     await signOut(auth);
   };
 
-  return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
+  // ✅ website se domain nikaalne ka helper
+  const getLogoUrl = (homepage) => {
+    try {
+      const domain = new URL(homepage).hostname;
+      return `https://logo.clearbit.com/${domain}`;
+    } catch {
+      return null;
+    }
+  };
 
-      <p className="mb-4 text-gray-700">
-        Logged in as: {auth.currentUser?.email}
-      </p>
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Colleges & Universities</h2>
 
       <button
         onClick={handleSignOut}
@@ -56,61 +55,76 @@ const Dashboard = () => {
         Sign Out
       </button>
 
-      {/* 🔍 Search Section */}
-      <div className="flex gap-2 mb-6">
-        <input
-          type="text"
+      {/* Country select */}
+      <div className="flex gap-3 mb-6">
+        <select
+          className="border px-3 py-2 rounded"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
-          placeholder="Enter country (e.g. India, Canada)"
-          className="border px-3 py-2 rounded w-full"
-        />
+        >
+          <option>India</option>
+          <option>United States</option>
+          <option>Canada</option>
+          <option>Australia</option>
+          <option>United Kingdom</option>
+        </select>
+
         <button
-          onClick={fetchUniversities}
+          onClick={fetchInstitutions}
           className="bg-blue-600 text-white px-4 py-2 rounded"
         >
           Search
         </button>
       </div>
 
-      <h2 className="text-xl font-semibold mb-3">
-        Universities in {country}
-      </h2>
-
       {loading && <p>Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
 
-      {!loading && !error && universities.length === 0 && (
-        <p>No universities found.</p>
-      )}
+      {/* ✅ LOGO + NAME */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {institutions.map((inst, i) => {
+          const logo = inst.homepage_url
+            ? getLogoUrl(inst.homepage_url)
+            : null;
 
-      {!loading && !error && universities.length > 0 && (
-        <ul className="list-disc pl-5">
-          {universities.map((uni, index) => (
-            <li key={index} className="mb-3">
-              <strong>{uni.name}</strong>
-              <span className="ml-2 text-gray-600">
-                ({uni.country})
-              </span>
-
-              {uni.website && (
-                <a
-                  href={
-                    Array.isArray(uni.website)
-                      ? uni.website[0]
-                      : uni.website
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 ml-2 underline"
-                >
-                  Visit
-                </a>
+          return (
+            <div
+              key={i}
+              className="flex items-center gap-4 border p-4 rounded shadow-sm"
+            >
+              {/* LOGO */}
+              {logo ? (
+                <img
+                  src={logo}
+                  alt={inst.display_name}
+                  className="w-12 h-12 object-contain rounded"
+                  onError={(e) => (e.target.style.display = "none")}
+                />
+              ) : (
+                <div className="w-12 h-12 bg-gray-200 rounded" />
               )}
-            </li>
-          ))}
-        </ul>
-      )}
+
+              {/* DETAILS */}
+              <div>
+                <h4 className="font-semibold">{inst.display_name}</h4>
+                <p className="text-sm text-gray-600">
+                  Country: {inst.country_code}
+                </p>
+
+                {inst.homepage_url && (
+                  <a
+                    href={inst.homepage_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 text-sm underline"
+                  >
+                    Visit Website
+                  </a>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
