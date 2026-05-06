@@ -1,56 +1,54 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 
 const Dashboard = () => {
   const [colleges, setColleges] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [country, setCountry] = useState("India");
   const [error, setError] = useState(null);
 
-  // ✅ HTTPS-safe proxy for Hipolabs (works in production)
-  const API_URL =
-    "https://cors.isomorphic-git.org/http://universities.hipolabs.com/search?country=India";
+  const BASE_URL =
+    "https://public.opendatasoft.com/api/records/1.0/search/?dataset=world-universities";
 
-  useEffect(() => {
-    const fetchColleges = async () => {
-      try {
-        const response = await fetch(API_URL);
+  const fetchColleges = async (selectedCountry) => {
+    setLoading(true);
+    setError(null);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch colleges");
-        }
-
-        const data = await response.json();
-        setColleges(data);
-      } catch (err) {
-        console.error(err);
-        setError("Unable to load colleges");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchColleges();
-  }, []);
-
-  const handleSignOut = async () => {
     try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error signing out:", error);
+      const url = selectedCountry
+        ? `${BASE_URL}&rows=50&refine.country=${selectedCountry}`
+        : `${BASE_URL}&rows=50`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      setColleges(data.records || []);
+    } catch (err) {
+      setError("Failed to load colleges");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // ✅ Default load (India)
+  useEffect(() => {
+    fetchColleges(country);
+  }, []);
+
+  const handleSearch = () => {
+    fetchColleges(country);
+  };
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+  };
+
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className="p-4 max-w-5xl mx-auto">
       <h2 className="text-2xl mb-2">Dashboard</h2>
 
-      <p className="mb-1">
-        <strong>Email:</strong> {auth.currentUser?.email}
-      </p>
-      <p className="mb-4">
-        <strong>Name:</strong> {auth.currentUser?.displayName || "N/A"}
-      </p>
+      <p className="mb-4">{auth.currentUser?.email}</p>
 
       <button
         onClick={handleSignOut}
@@ -59,31 +57,48 @@ const Dashboard = () => {
         Sign Out
       </button>
 
-      <h3 className="text-xl mb-3">Colleges in India</h3>
+      {/* ✅ SEARCH + DROPDOWN */}
+      <div className="flex gap-2 mb-6">
+        <input
+          type="text"
+          placeholder="Enter country name (e.g. India, USA)"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          className="border px-3 py-2 rounded w-full"
+        />
 
-      {loading && <p>Loading colleges…</p>}
+        <button
+          onClick={handleSearch}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Search
+        </button>
+      </div>
+
+      <h3 className="text-xl mb-3">
+        Universities {country && `in ${country}`}
+      </h3>
+
+      {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
 
       {!loading && !error && (
         <ul className="list-disc pl-5">
-          {colleges.map((college, index) => (
+          {colleges.map((c, index) => (
             <li key={index} className="mb-3">
-              <strong>{college.name}</strong>
+              <strong>{c.fields.name}</strong>
+              <span className="text-gray-500 ml-2">
+                ({c.fields.country})
+              </span>
 
-              {college["state-province"] && (
-                <span className="text-gray-500 ml-2">
-                  ({college["state-province"]})
-                </span>
-              )}
-
-              {college.web_pages?.length > 0 && (
+              {c.fields.website && (
                 <a
-                  href={college.web_pages[0]}
+                  href={c.fields.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-pink-500 ml-2 underline"
+                  className="text-blue-500 ml-3"
                 >
-                  Visit Website
+                  Visit
                 </a>
               )}
             </li>
