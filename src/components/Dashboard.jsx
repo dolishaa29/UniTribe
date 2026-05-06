@@ -12,17 +12,16 @@ const countryCodes = {
 
 const Dashboard = () => {
   const [colleges, setColleges] = useState([]);
+  const [images, setImages] = useState({});
   const [country, setCountry] = useState("India");
   const [loading, setLoading] = useState(false);
 
   const fetchColleges = async () => {
     setLoading(true);
 
-    const code = countryCodes[country];
     const res = await fetch(
-      `https://api.openalex.org/institutions?filter=country_code:${code}&per-page=20`
+      `https://api.openalex.org/institutions?filter=country_code:${countryCodes[country]}&per-page=10`
     );
-
     const data = await res.json();
     setColleges(data.results || []);
     setLoading(false);
@@ -32,22 +31,34 @@ const Dashboard = () => {
     fetchColleges();
   }, []);
 
+  // ✅ WIKIPEDIA IMAGE FETCH
+  const fetchImage = async (name) => {
+    try {
+      const title = name.replace(/ /g, "_");
+      const res = await fetch(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${title}`
+      );
+      const data = await res.json();
+
+      if (data.thumbnail?.source) {
+        setImages((prev) => ({
+          ...prev,
+          [name]: data.thumbnail.source,
+        }));
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    colleges.forEach((c) => fetchImage(c.display_name));
+  }, [colleges]);
+
   const handleSignOut = async () => {
     await signOut(auth);
   };
 
-  // ✅ LOGO URL BANANE KA SIMPLE FUNCTION
-  const getLogoUrl = (homepageUrl) => {
-    try {
-      const domain = new URL(homepageUrl).hostname;
-      return `https://logo.clearbit.com/${domain}`;
-    } catch {
-      return null;
-    }
-  };
-
   return (
-    <div className="p-5 max-w-5xl mx-auto">
+    <div className="p-5 max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">
         Colleges & Universities ({country})
       </h2>
@@ -59,7 +70,6 @@ const Dashboard = () => {
         Sign Out
       </button>
 
-      {/* Country filter */}
       <div className="flex gap-2 mb-5">
         <select
           value={country}
@@ -83,48 +93,38 @@ const Dashboard = () => {
 
       {loading && <p>Loading...</p>}
 
-      {/* COLLEGE LIST */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {colleges.map((c, i) => {
-          const logoUrl = c.homepage_url
-            ? getLogoUrl(c.homepage_url)
-            : null;
-
-          return (
-            <div
-              key={i}
-              className="flex gap-4 items-center p-3 border rounded"
-            >
-              {/* LOGO */}
-              {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt={c.display_name}
-                  className="w-12 h-12 object-contain"
-                  onError={(e) => (e.target.style.display = "none")}
-                />
-              ) : (
-                <div className="w-12 h-12 bg-gray-200 rounded" />
-              )}
-
-              {/* INFO */}
-              <div>
-                <h4 className="font-semibold">{c.display_name}</h4>
-
-                {c.homepage_url && (
-                  <a
-                    href={c.homepage_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 text-sm underline"
-                  >
-                    Visit website
-                  </a>
-                )}
+        {colleges.map((c, i) => (
+          <div key={i} className="border rounded overflow-hidden">
+            {/* ✅ REAL IMAGE */}
+            {images[c.display_name] ? (
+              <img
+                src={images[c.display_name]}
+                alt={c.display_name}
+                className="w-full h-40 object-cover"
+              />
+            ) : (
+              <div className="h-40 bg-gray-200 flex items-center justify-center">
+                No Image
               </div>
+            )}
+
+            <div className="p-3">
+              <h4 className="font-semibold">{c.display_name}</h4>
+
+              {c.homepage_url && (
+                <a
+                  href={c.homepage_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 text-sm underline"
+                >
+                  Visit website
+                </a>
+              )}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );
