@@ -20,7 +20,7 @@ const Dashboard = () => {
     setLoading(true);
 
     const res = await fetch(
-      `https://api.openalex.org/institutions?filter=country_code:${countryCodes[country]}&per-page=100`
+      `https://api.openalex.org/institutions?filter=country_code:${countryCodes[country]}&per-page=1000`
     );
     const data = await res.json();
     setColleges(data.results || []);
@@ -93,7 +93,7 @@ const Dashboard = () => {
 
       {loading && <p>Loading...</p>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {colleges.map((c, i) => (
           <div key={i} className="border rounded overflow-hidden">
             {/* ✅ REAL IMAGE */}
