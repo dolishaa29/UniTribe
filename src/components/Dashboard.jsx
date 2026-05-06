@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 
-const countryMap = {
+const countryCodes = {
   India: "IN",
   "United States": "US",
   Canada: "CA",
@@ -11,56 +11,57 @@ const countryMap = {
 };
 
 const Dashboard = () => {
-  const [institutions, setInstitutions] = useState([]);
+  const [colleges, setColleges] = useState([]);
   const [country, setCountry] = useState("India");
   const [loading, setLoading] = useState(false);
 
-  const fetchInstitutions = async () => {
+  // ✅ SIMPLE API CALL
+  const fetchColleges = async () => {
     setLoading(true);
 
+    const code = countryCodes[country];
     const res = await fetch(
-      `https://api.openalex.org/institutions?filter=country_code:${countryMap[country]}&per-page=25`
+      `https://api.openalex.org/institutions?filter=country_code:${code}&per-page=20`
     );
+
     const data = await res.json();
-    setInstitutions(data.results || []);
+    setColleges(data.results || []);
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchInstitutions();
+    fetchColleges();
   }, []);
 
   const handleSignOut = async () => {
     await signOut(auth);
   };
 
-  // ✅ website se domain nikaalne ka helper
-  const getLogoUrl = (homepage) => {
+  const getLogo = (url) => {
     try {
-      const domain = new URL(homepage).hostname;
-      return `https://logo.clearbit.com/${domain}`;
+      return `https://logo.clearbit.com/${new URL(url).hostname}`;
     } catch {
       return null;
     }
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-5 max-w-5xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Colleges & Universities</h2>
 
       <button
         onClick={handleSignOut}
-        className="bg-red-500 text-white px-4 py-2 rounded mb-6"
+        className="bg-red-500 text-white px-4 py-2 rounded mb-4"
       >
         Sign Out
       </button>
 
-      {/* Country select */}
-      <div className="flex gap-3 mb-6">
+      {/* ✅ Country filter */}
+      <div className="flex gap-2 mb-5">
         <select
-          className="border px-3 py-2 rounded"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
+          className="border px-3 py-2 rounded"
         >
           <option>India</option>
           <option>United States</option>
@@ -70,7 +71,7 @@ const Dashboard = () => {
         </select>
 
         <button
-          onClick={fetchInstitutions}
+          onClick={fetchColleges}
           className="bg-blue-600 text-white px-4 py-2 rounded"
         >
           Search
@@ -79,51 +80,46 @@ const Dashboard = () => {
 
       {loading && <p>Loading...</p>}
 
-      {/* ✅ LOGO + NAME */}
+      {/* ✅ College List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {institutions.map((inst, i) => {
-          const logo = inst.homepage_url
-            ? getLogoUrl(inst.homepage_url)
-            : null;
+        {colleges.map((c, i) => (
+          <div
+            key={i}
+            className="flex gap-4 items-center p-3 border rounded"
+          >
+            {/* LOGO */}
+            {c.homepage_url ? (
+              <img
+                src={getLogo(c.homepage_url)}
+                alt={c.display_name}
+                className="w-12 h-12 object-contain"
+                onError={(e) => (e.target.style.display = "none")}
+              />
+            ) : (
+              <div className="w-12 h-12 bg-gray-200 rounded" />
+            )}
 
-          return (
-            <div
-              key={i}
-              className="flex items-center gap-4 border p-4 rounded shadow-sm"
-            >
-              {/* LOGO */}
-              {logo ? (
-                <img
-                  src={logo}
-                  alt={inst.display_name}
-                  className="w-12 h-12 object-contain rounded"
-                  onError={(e) => (e.target.style.display = "none")}
-                />
-              ) : (
-                <div className="w-12 h-12 bg-gray-200 rounded" />
+            {/* INFO */}
+            <div>
+              <h4 className="font-semibold">{c.display_name}</h4>
+
+              <p className="text-sm text-gray-600">
+                Country: {c.country_code}
+              </p>
+
+              {c.homepage_url && (
+                <a
+                  href={c.homepage_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 text-sm underline"
+                >
+                  Visit website
+                </a>
               )}
-
-              {/* DETAILS */}
-              <div>
-                <h4 className="font-semibold">{inst.display_name}</h4>
-                <p className="text-sm text-gray-600">
-                  Country: {inst.country_code}
-                </p>
-
-                {inst.homepage_url && (
-                  <a
-                    href={inst.homepage_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 text-sm underline"
-                  >
-                    Visit Website
-                  </a>
-                )}
-              </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );
