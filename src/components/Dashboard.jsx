@@ -20,7 +20,7 @@ const Dashboard = () => {
     setLoading(true);
 
     const res = await fetch(
-      `https://api.openalex.org/institutions?filter=country_code:${countryCodes[country]}&per-page=500`
+      `https://api.openalex.org/institutions?filter=country_code:${countryCodes[country]}&per-page=200`
     );
     const data = await res.json();
     setColleges(data.results || []);
