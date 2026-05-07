@@ -1,129 +1,132 @@
 import { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
+import Card from "./Card";
 
+// ✅ simple country object
 const countryCodes = {
   India: "IN",
   "United States": "US",
   Canada: "CA",
   Australia: "AU",
   "United Kingdom": "GB",
+  Dubai: "AE",
+  Russia: "RU",
 };
 
 const Dashboard = () => {
-  const [colleges, setColleges] = useState([]);
-  const [images, setImages] = useState({});
-  const [country, setCountry] = useState("India");
-  const [loading, setLoading] = useState(false);
+  // ✅ single state (sab values yahin)
+  const [state, setState] = useState({
+    country: "India",
+    colleges: [],
+    images: {},
+    loading: false,
+  });
 
-  const fetchColleges = async () => {
-    setLoading(true);
+  console.log("STATE:", state);
 
-    const res = await fetch(
-      `https://api.openalex.org/institutions?filter=country_code:${countryCodes[country]}&per-page=200`
-    );
-    const data = await res.json();
-    setColleges(data.results || []);
-    setLoading(false);
+  // ✅ LOGOUT (firebase same)
+  const handleSignOut = async () => {
+    await signOut(auth);
+    console.log("User logged out");
   };
 
-  useEffect(() => {
-    fetchColleges();
-  }, []);
+  // ✅ colleges fetch
+  const fetchColleges = async () => {
+    console.log("Fetching colleges for:", state.country);
 
-  // ✅ WIKIPEDIA IMAGE FETCH
-  const fetchImage = async (name) => {
+    setState((prev) => ({
+      ...prev,
+      loading: true,
+    }));
+
+    const res = await fetch(
+      `https://api.openalex.org/institutions?filter=country_code:${countryCodes[state.country]}`
+    );
+
+    const data = await res.json();
+    console.log("Colleges Data:", data.results);
+
+    setState((prev) => ({
+      ...prev,
+      colleges: data.results,
+      loading: false,
+    }));
+  };
+
+  // ✅ image fetch
+  const fetchImage = async (collegeName) => {
     try {
-      const title = name.replace(/ /g, "_");
+      const title = collegeName.replace(/ /g, "_");
       const res = await fetch(
         `https://en.wikipedia.org/api/rest_v1/page/summary/${title}`
       );
       const data = await res.json();
 
+      console.log("Image Data:", data);
+
       if (data.thumbnail?.source) {
-        setImages((prev) => ({
+        setState((prev) => ({
           ...prev,
-          [name]: data.thumbnail.source,
+          images: {
+            ...prev.images,
+            [collegeName]: data.thumbnail.source,
+          },
         }));
       }
-    } catch {}
+    } catch (err) {
+      console.log("Image error", err);
+    }
   };
 
+  // ✅ jab colleges aaye
   useEffect(() => {
-    colleges.forEach((c) => fetchImage(c.display_name));
-  }, [colleges]);
-
-  const handleSignOut = async () => {
-    await signOut(auth);
-  };
+    state.colleges.forEach((item) => {
+      fetchImage(item.display_name);
+    });
+  }, [state.colleges]);
 
   return (
-    <div className="p-5 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">
-        Colleges & Universities ({country})
-      </h2>
+    <div style={{ padding: "20px" }}>
+      <h2>Colleges & Universities ({state.country})</h2>
 
-      <button
-        onClick={handleSignOut}
-        className="bg-red-500 text-white px-4 py-2 rounded mb-4"
-      >
+      {/* ✅ Sign out (firebase) */}
+      <button onClick={handleSignOut} style={{ background: "red", color: "#fff" }}>
         Sign Out
       </button>
 
-      <div className="flex gap-2 mb-5">
-        <select
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          className="border px-3 py-2 rounded"
-        >
-          <option>India</option>
-          <option>United States</option>
-          <option>Canada</option>
-          <option>Australia</option>
-          <option>United Kingdom</option>
-        </select>
+      <br /><br />
 
-        <button
-          onClick={fetchColleges}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Search
-        </button>
-      </div>
+      {/* ✅ Country select */}
+      <select
+        value={state.country}
+        onChange={(e) =>
+          setState((prev) => ({
+            ...prev,
+            country: e.target.value,
+          }))
+        }
+      >
+        <option>India</option>
+        <option>United States</option>
+        <option>Canada</option>
+      </select>
 
-      {loading && <p>Loading...</p>}
+      <button onClick={fetchColleges} style={{ marginLeft: "10px" }}>
+        Search
+      </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {colleges.map((c, i) => (
-          <div key={i} className="border rounded overflow-hidden">
-            {/* ✅ REAL IMAGE */}
-            {images[c.display_name] ? (
-              <img
-                src={images[c.display_name]}
-                alt={c.display_name}
-                className="w-full h-40 object-cover"
-              />
-            ) : (
-              <div className="h-40 bg-gray-200 flex items-center justify-center">
-                No Image
-              </div>
-            )}
+      {state.loading && <p>Loading...</p>}
 
-            <div className="p-3">
-              <h4 className="font-semibold">{c.display_name}</h4>
-
-              {c.homepage_url && (
-                <a
-                  href={c.homepage_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 text-sm underline"
-                >
-                  Visit website
-                </a>
-              )}
-            </div>
-          </div>
+      {/* ✅ Cards */}
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        {state.colleges.map((item, index) => (
+          <Card
+            key={index}
+            name={item.display_name}
+            website={item.homepage_url}
+            image={state.images[item.display_name]}
+          />
         ))}
       </div>
     </div>
