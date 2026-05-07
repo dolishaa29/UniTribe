@@ -3,19 +3,13 @@ import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 import Card from "./Card";
 
-// ✅ simple country object
 const countryCodes = {
   India: "IN",
   "United States": "US",
   Canada: "CA",
-  Australia: "AU",
-  "United Kingdom": "GB",
-  Dubai: "AE",
-  Russia: "RU",
 };
 
 const Dashboard = () => {
-  // ✅ single state (sab values yahin)
   const [state, setState] = useState({
     country: "India",
     colleges: [],
@@ -23,29 +17,20 @@ const Dashboard = () => {
     loading: false,
   });
 
-  console.log("STATE:", state);
-
-  // ✅ LOGOUT (firebase same)
+  // ✅ logout (firebase intact)
   const handleSignOut = async () => {
     await signOut(auth);
-    console.log("User logged out");
   };
 
-  // ✅ colleges fetch
+  // ✅ fetch colleges
   const fetchColleges = async () => {
-    console.log("Fetching colleges for:", state.country);
-
-    setState((prev) => ({
-      ...prev,
-      loading: true,
-    }));
+    setState((prev) => ({ ...prev, loading: true }));
 
     const res = await fetch(
       `https://api.openalex.org/institutions?filter=country_code:${countryCodes[state.country]}`
     );
 
     const data = await res.json();
-    console.log("Colleges Data:", data.results);
 
     setState((prev) => ({
       ...prev,
@@ -54,23 +39,21 @@ const Dashboard = () => {
     }));
   };
 
-  // ✅ image fetch
-  const fetchImage = async (collegeName) => {
+  // ✅ fetch image
+  const fetchImage = async (name) => {
     try {
-      const title = collegeName.replace(/ /g, "_");
+      const title = name.replace(/ /g, "_");
       const res = await fetch(
         `https://en.wikipedia.org/api/rest_v1/page/summary/${title}`
       );
       const data = await res.json();
-
-      console.log("Image Data:", data);
 
       if (data.thumbnail?.source) {
         setState((prev) => ({
           ...prev,
           images: {
             ...prev.images,
-            [collegeName]: data.thumbnail.source,
+            [name]: data.thumbnail.source,
           },
         }));
       }
@@ -79,7 +62,7 @@ const Dashboard = () => {
     }
   };
 
-  // ✅ jab colleges aaye
+  // ✅ jab colleges aaye → images
   useEffect(() => {
     state.colleges.forEach((item) => {
       fetchImage(item.display_name);
@@ -88,16 +71,12 @@ const Dashboard = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>Colleges & Universities ({state.country})</h2>
+      <h2>Colleges ({state.country})</h2>
 
-      {/* ✅ Sign out (firebase) */}
-      <button onClick={handleSignOut} style={{ background: "red", color: "#fff" }}>
-        Sign Out
-      </button>
-
+      <button onClick={handleSignOut}>Sign Out</button>
       <br /><br />
 
-      {/* ✅ Country select */}
+      {/* ✅ country select */}
       <select
         value={state.country}
         onChange={(e) =>
@@ -118,14 +97,14 @@ const Dashboard = () => {
 
       {state.loading && <p>Loading...</p>}
 
-      {/* ✅ Cards */}
+      {/* ✅ MAP + PROPS PASS */}
       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
         {state.colleges.map((item, index) => (
           <Card
             key={index}
-            name={item.display_name}
-            website={item.homepage_url}
-            image={state.images[item.display_name]}
+            country={state.country}          // ✅ selected country
+            college={item}                  // ✅ poora college object
+            image={state.images[item.display_name]} // ✅ image
           />
         ))}
       </div>
