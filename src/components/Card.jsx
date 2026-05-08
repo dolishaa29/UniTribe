@@ -1,11 +1,12 @@
 import React from "react";
-import { ExternalLink, MapPin, School, ArrowUpRight } from "lucide-react";
+import { MapPin, School, ArrowUpRight } from "lucide-react";
 
 const Card = ({ country, college, image }) => {
-  const name = college?.display_name || "Unknown Institution";
-  const type = college?.type || "University";
-  const city = college?.location?.city || "Global";
-  const url = college?.homepage_url || "#";
+  const {
+    display_name: name = "Unknown Institution",
+    homepage_url: url = "#",
+  } = college ;
+
 
   return (
     <div className="group relative w-full bg-white rounded-[2rem] p-3 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(147,51,234,0.15)] transition-all duration-500 flex flex-col">
@@ -23,6 +24,8 @@ const Card = ({ country, college, image }) => {
           </div>
         )}
         
+
+
         <div className="absolute top-3 left-3">
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/70 backdrop-blur-md rounded-full border border-white/50 shadow-sm">
             <MapPin size={12} className="text-purple-600" />
@@ -34,32 +37,23 @@ const Card = ({ country, college, image }) => {
       </div>
 
       <div className="flex flex-col flex-1 px-4 py-6">
-        
-        <div className="flex justify-between items-start mb-2">
-           <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest bg-purple-50 px-2 py-0.5 rounded">
-            {type.replace("_", " ")}
-          </span>
-        </div>
+  
 
         <h2 className="text-lg font-bold text-gray-800 leading-tight line-clamp-2 mb-4 group-hover:text-purple-600 transition-colors">
           {name}
         </h2>
 
-        <div className="mt-auto space-y-4">
-          <div className="flex items-center gap-2 text-gray-400">
-             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
-             <span className="text-xs font-medium italic">{city} Campus</span>
-          </div>
 
+
+        <div className="mt-auto space-y-4">
           <a
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group/btn w-full h-12 flex items-center justify-center gap-2 bg-gray-900 text-white rounded-xl font-bold text-sm overflow-hidden relative transition-all duration-300 hover:bg-purple-600 hover:shadow-lg hover:shadow-purple-200"
+            className="group/btn w-full h-12 flex items-center justify-center gap-2 bg-gray-900 text-white rounded-xl font-bold text-sm relative transition-all duration-300 hover:bg-purple-600 hover:shadow-lg hover:shadow-purple-200"
           >
-            <span className="relative z-10 flex items-center gap-2">
-              Visit Website <ArrowUpRight size={16} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
-            </span>
+            Visit Website 
+            <ArrowUpRight size={16} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
           </a>
         </div>
       </div>
