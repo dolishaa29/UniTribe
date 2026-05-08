@@ -2,7 +2,6 @@ import React from "react";
 import { ExternalLink, MapPin, School, ArrowUpRight } from "lucide-react";
 
 const Card = ({ country, college, image }) => {
-  // Extracting data from API object
   const name = college?.display_name || "Unknown Institution";
   const type = college?.type || "University";
   const city = college?.location?.city || "Global";
@@ -11,7 +10,6 @@ const Card = ({ country, college, image }) => {
   return (
     <div className="group relative w-full bg-white rounded-[2rem] p-3 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(147,51,234,0.15)] transition-all duration-500 flex flex-col">
       
-      {/* --- Image Container --- */}
       <div className="relative h-52 w-full overflow-hidden rounded-[1.5rem]">
         {image ? (
           <img
@@ -25,7 +23,6 @@ const Card = ({ country, college, image }) => {
           </div>
         )}
         
-        {/* Glassmorphism Country Badge */}
         <div className="absolute top-3 left-3">
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/70 backdrop-blur-md rounded-full border border-white/50 shadow-sm">
             <MapPin size={12} className="text-purple-600" />
@@ -33,11 +30,9 @@ const Card = ({ country, college, image }) => {
           </div>
         </div>
 
-        {/* Overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       </div>
 
-      {/* --- Content Section --- */}
       <div className="flex flex-col flex-1 px-4 py-6">
         
         <div className="flex justify-between items-start mb-2">
@@ -51,13 +46,11 @@ const Card = ({ country, college, image }) => {
         </h2>
 
         <div className="mt-auto space-y-4">
-          {/* Subtle Info Line */}
           <div className="flex items-center gap-2 text-gray-400">
              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
              <span className="text-xs font-medium italic">{city} Campus</span>
           </div>
 
-          {/* Action Button: Styled like the Dashboard Search */}
           <a
             href={url}
             target="_blank"
@@ -71,7 +64,6 @@ const Card = ({ country, college, image }) => {
         </div>
       </div>
 
-      {/* Decorative Gradient Border (Top Right) */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-500/10 to-transparent rounded-tr-[2rem] -z-10"></div>
     </div>
   );
